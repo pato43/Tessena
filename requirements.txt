@@ -1,0 +1,4 @@
+streamlit
+openai        # SDK 1.x compatible con DeepSeek
+pillow
+requests
