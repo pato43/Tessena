@@ -59,7 +59,7 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 HERO_IMG_URL = "https://raw.githubusercontent.com/tu-usuario/tessena-assets/main/hero-laptop-stethoscope.png"
 
 # ---------- Cliente OpenRouter ----------
-api_key = os.getenv("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") or st.secrets.get("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", "")
+api_key = os.getenv("OPENROUTER_API_KEY") or st.secrets.get("OPENROUTER_API_KEY", "")
 if not api_key:
     st.error("⚠️ Debes configurar OPENROUTER_API_KEY en tu entorno o en st.secrets.")
     st.stop()
