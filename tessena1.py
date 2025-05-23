@@ -1,157 +1,178 @@
-# app.py – Tessena • Buscador IA de Medicamentos (DeepSeek)
-# ---------------------------------------------------
+# app.py – Tessena • Buscador IA de Medicamentos (OpenRouter · Diseño mejorado)
+# -----------------------------------------------------------------
 # Requisitos:
 #   pip install streamlit openai pillow requests
 # Variables de entorno necesarias:
-#   DEEPSEEK_API_KEY = "tu‑clave"  (no compartas en código)
-# ---------------------------------------------------
+#   OPENROUTER_API_KEY = "sk-..."
+# -----------------------------------------------------------------
 
 import os, json, requests
 from io import BytesIO
 from PIL import Image
 import streamlit as st
-from openai import OpenAI  # SDK 1.x compatible también con DeepSeek
+from openai import OpenAI
 
 # ---------- Configuración general ----------
 st.set_page_config(
     page_title="Tessena • Buscador IA de Medicamentos",
     page_icon="💊",
-    layout="centered",
+    layout="wide",
 )
-HERO_IMG_URL = (
-    "https://github.com/pato43/Tessena/blob/main/tessena1.png"
-)  # cámbialo por la URL definitiva
 
-# Crea el cliente apuntando al endpoint DeepSeek
+# ---------- Estilos globales ----------
+CUSTOM_CSS = """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"]  {
+        font-family: 'Inter', sans-serif;
+    }
+    .stApp {
+        background: linear-gradient(135deg,#e5f1ff 0%,#ffffff 100%);
+    }
+    .tessena-card {
+        background: #ffffff;
+        border: 1px solid #e1e8ff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        margin-top: 8px;
+    }
+    .stButton>button {
+        background-color:#1976D2;
+        color:#fff;
+        border:none;
+        border-radius:8px;
+        padding:0.6rem 1.2rem;
+        font-weight:600;
+        transition:background 0.2s ease;
+    }
+    .stButton>button:hover {
+        background-color:#125ca1;
+        color:#fff;
+    }
+</style>
+"""
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+# ---------- Recursos ----------
+HERO_IMG_URL = "https://raw.githubusercontent.com/tu-usuario/tessena-assets/main/hero-laptop-stethoscope.png"
+
+# ---------- Cliente OpenRouter ----------
+api_key = os.getenv("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") or st.secrets.get("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", "")
+if not api_key:
+    st.error("⚠️ Debes configurar OPENROUTER_API_KEY en tu entorno o en st.secrets.")
+    st.stop()
+
 client = OpenAI(
-    api_key=os.getenv("sk-3fcdb61f94df48428f395b7953d6eed2"),
-    base_url="https://api.deepseek.com",
+    api_key=api_key,
+    base_url="https://openrouter.ai/api/v1",
+    default_headers={
+        "HTTP-Referer": "https://tessena.streamlit.app/",
+        "X-Title": "TessenaMedicamentos",
+    },
 )
 
-# ---------- Esquema JSON que el modelo debe rellenar ----------
+# ---------- Schema JSON ----------
 DRUG_CARD_SCHEMA = {
     "name": "drug_card",
-    "description": "Ficha resumida, estilo prospecto, de un medicamento",
+    "description": "Ficha resumida de un medicamento",
     "parameters": {
         "type": "object",
         "properties": {
-            "brand_name": {"type": "string", "description": "Nombre comercial"},
-            "generic_name": {"type": "string", "description": "Nombre genérico"},
-            "composition": {"type": "string", "description": "Principios activos y concentraciones"},
+            "brand_name": {"type": "string"},
+            "generic_name": {"type": "string"},
+            "composition": {"type": "string"},
             "therapeutic_indications": {"type": "string"},
             "contraindications": {"type": "string"},
             "adverse_reactions": {"type": "string"},
             "dose_and_route": {"type": "string"},
             "presentations": {"type": "string"},
-            "lab": {"type": "string", "description": "Laboratorio o titular del registro"},
+            "lab": {"type": "string"},
         },
         "required": ["brand_name", "generic_name"],
     },
 }
 
-DISCLAIMER = (
-    "🔔 **Información educativa:** Los datos mostrados no sustituyen la consulta con un profesional de la salud."
-)
+DISCLAIMER = "🔔 **Información educativa:** Los datos mostrados no sustituyen la consulta con un profesional de la salud."
 
-# ---------- Utilidades ----------
+# ---------- Auxiliares ----------
 
-def load_hero(url: str):
+def load_image(url: str):
     try:
-        r = requests.get(url, timeout=10)
-        return Image.open(BytesIO(r.content))
+        res = requests.get(url, timeout=10)
+        res.raise_for_status()
+        return Image.open(BytesIO(res.content))
     except Exception:
         return None
 
 
-def call_deepseek(query: str) -> dict:
-    """Llama a deepseek-chat y devuelve la ficha estructurada."""
-
-    system_prompt = (
-        "Eres un asistente farmacéutico. Contesta únicamente con información que conozcas con alta certeza. "
-        "Si no hay datos fiables escribe 'ND'. No prescribas dosis personalizadas. "
-        "Al final añade la frase 'Información educativa, no sustituye la consulta médica'."
+def fetch_card(question: str) -> dict:
+    system = (
+        "Eres un asistente farmacéutico. Responde sólo con datos que conozcas con certeza. Si desconoces un punto, escribe 'ND'. "
+        "No prescribas dosis personalizadas. Al final añade la frase 'Información educativa, no sustituye la consulta médica'."
     )
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": query},
-    ]
-
     resp = client.chat.completions.create(
-        model="deepseek-chat",  # o deepseek-reasoner si prefieres el modelo de razonamiento
-        messages=messages,
+        model="deepseek/deepseek-r1:free",
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": question},
+        ],
         tools=[{"type": "function", "function": DRUG_CARD_SCHEMA}],
         tool_choice={"type": "function", "function": {"name": "drug_card"}},
-        stream=False,
     )
 
     try:
-        args_json = resp.choices[0].message.tool_calls[0].function.arguments
-        return json.loads(args_json)
+        args = resp.choices[0].message.tool_calls[0].function.arguments
+        return json.loads(args)
     except Exception:
         return {}
 
 
-def section(title: str, content: str):
-    """Muestra sección plegable solo si hay contenido (y no es ND)."""
-    if content and content.upper() != "ND":
-        with st.expander(title.capitalize()):
-            st.markdown(content)
+def draw_section(title: str, text: str):
+    if text and text.strip().upper() != "ND":
+        st.markdown(f"**{title}:**  ")
+        st.markdown(text)
 
 
 # ---------- UI ----------
 
 def main():
-    # Hero ------------------------------------------------------
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.markdown(
-            """# Tessena 💊  
-            ### Encuentra información confiable de medicamentos al instante""",
-            unsafe_allow_html=True,
-        )
-        st.write(
-            "Ingresa el nombre comercial o genérico y obtén un resumen estructurado en segundos."
-        )
-    with col2:
-        img = load_hero(HERO_IMG_URL)
-        if img:
-            st.image(img, use_column_width=True)
+    col_hero, col_img = st.columns([3, 2])
+    with col_hero:
+        st.markdown("## Tessena 💊")
+        st.markdown("### Encuentra información confiable de medicamentos al instante")
+        st.write("Ingresa el nombre comercial o genérico y obtén un resumen estructurado en segundos.")
+    with col_img:
+        hero = load_image(HERO_IMG_URL)
+        if hero:
+            st.image(hero, use_column_width=True)
 
-    st.divider()
+    st.markdown("---")
 
-    # Buscador --------------------------------------------------
-    query = st.text_input(
-        "Nombre del medicamento", placeholder="Ej. Tempra 500 mg o Paracetamol", key="query"
-    )
-    col_b, col_c = st.columns([1, 5])
-    with col_b:
-        search_pressed = st.button("🔍 Buscar")
-
-    if search_pressed and query.strip():
-        with st.spinner("Consultando Tessena IA (DeepSeek)…"):
-            card = call_deepseek(query)
+    query = st.text_input("Nombre del medicamento", placeholder="Ej. Tempra 500 mg o Paracetamol")
+    if st.button("🔍 Buscar") and query.strip():
+        with st.spinner("Consultando Tessena IA…"):
+            card = fetch_card(query.strip())
 
         if card:
-            st.success(
-                f"### {card.get('brand_name', 'Medicamento')} ({card.get('generic_name', '')})"
-            )
-            section("Composición", card.get("composition"))
-            section("Indicaciones terapéuticas", card.get("therapeutic_indications"))
-            section("Contraindicaciones", card.get("contraindications"))
-            section("Reacciones adversas", card.get("adverse_reactions"))
-            section("Dosis y vía de administración", card.get("dose_and_route"))
-            section("Presentaciones", card.get("presentations"))
-            section("Laboratorio", card.get("lab"))
-            st.info(DISCLAIMER)
+            st.markdown('<div class="tessena-card">', unsafe_allow_html=True)
+            st.markdown(f"### {card.get('brand_name','Medicamento')} ({card.get('generic_name','')})")
+            draw_section("Composición", card.get("composition"))
+            draw_section("Indicaciones terapéuticas", card.get("therapeutic_indications"))
+            draw_section("Contraindicaciones", card.get("contraindications"))
+            draw_section("Reacciones adversas", card.get("adverse_reactions"))
+            draw_section("Dosis y vía de administración", card.get("dose_and_route"))
+            draw_section("Presentaciones", card.get("presentations"))
+            draw_section("Laboratorio", card.get("lab"))
+            st.markdown(DISCLAIMER)
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.warning("No se encontró información fiable para esa consulta.")
 
-    # Pie de página -------------------------------------------
-    st.divider()
-    st.caption(
-        "© 2025 Tessena – Proyecto de inteligencia farmacéutica.  |  Made with Streamlit & deepseek‑chat"
-    )
+    st.markdown("---")
+    st.caption("© 2025 Tessena – Proyecto de inteligencia farmacéutica | Made with Streamlit & OpenRouter")
 
 
 if __name__ == "__main__":
