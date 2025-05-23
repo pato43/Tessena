@@ -47,7 +47,7 @@ DARK_CSS = """
 st.markdown(DARK_CSS, unsafe_allow_html=True)
 
 # ---------- Recursos ----------
-HERO_IMG_URL = "https://raw.githubusercontent.com/tu-usuario/tessena-assets/main/hero-dark.png"
+HERO_IMG_URL = "https://github.com/pato43/Tessena/blob/main/tessena1.png"
 
 # ---------- OpenRouter client ----------
 api_key = os.getenv("OPENROUTER_API_KEY") or st.secrets.get("OPENROUTER_API_KEY", "")
