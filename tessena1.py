@@ -115,13 +115,13 @@ with logo_col:
     st.image("tessena1.png", width=80)
 with text_col:
     st.markdown("## Tessena IA Médica 🇲🇽")
-    st.write("""<span style='font-size:0.95rem;'>IA de consulta médica en español • impulsada por <strong>Qwen3-32B</strong> y próximamente conectada a <strong>OpenDrugs, FDA</strong> y <strong>COFEPRIS</strong>.</span>""", unsafe_allow_html=True)
+    st.write("""<span style='font-size:0.95rem;'>IA de consulta médica en español • impulsada por <strong>Qwen3‑32B</strong> y próximamente conectada a <strong>OpenDrugs, FDA</strong> y <strong>COFEPRIS</strong>.</span>""", unsafe_allow_html=True)
 
 st.divider()
 
 query = st.text_input("Nombre del medicamento", placeholder="Ej. Paracetamol, Tempra, Reactix…")
 if st.button("Buscar", key="search_btn") and query.strip():
-    with st.spinner("Consultando Tessena IA…"):
+    with st.spinner("🧠 Pensando… consultando millones de bases médicas alrededor del mundo…"):
         card = structured_card(query.strip())
 
     if card and any(v.strip().upper()!="ND" for v in card.values()):
@@ -131,4 +131,4 @@ if st.button("Buscar", key="search_btn") and query.strip():
         st.markdown(f"<div class='tessena-card'><p>{desc}</p><p>{DISCLAIMER}</p></div>", unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("© 2025 Tessena – Inteligencia farmacéutica · Con Qwen3-32B · Streamlit & OpenRouter")
+st.caption("© 2025 Tessena – Inteligencia farmacéutica · Con Qwen3‑32B · Streamlit & OpenRouter")
