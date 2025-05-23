@@ -59,7 +59,8 @@ CARD_SCHEMA = {
     }
 }
 SYSTEM = (
-    "Eres un asistente farmacéutico en español. Devuelve sólo datos confiables; si no sabes un campo escribe 'ND'. "
+    "Eres un asistente farmacéutico en español en México. Devuelve sólo datos confiables; si no sabes un campo escribe 'ND'. "
+    "Haz enfasis en forma farmaceutica y formulación, presentación, composicion, indicaciones terapeuticas, efectos adversos, propiedades farmaceuticas, contraindicaciones, restricciones de uso en embarazo y lactancia, interacciones medicamentosas, dosis y vias de administracion, manejo ante sobresosis o ingesta accidental y recomendaciones sobre el medicamento "
     "No prescribas dosis personalizadas. Añade al final: 'Información educativa, no sustituye la consulta médica'."
 )
 DISCLAIMER = "🔔 **Información educativa:** Los datos mostrados no sustituyen la consulta con un profesional de la salud."
