@@ -54,13 +54,13 @@ CARD_SCHEMA = {
         "type":"object",
         "properties":{k:{"type":"string"} for k in [
             "brand_name","generic_name","composition","therapeutic_indications","contraindications",
-            "adverse_reactions","dose_and_route","presentations","lab"]},
+            "adverse_reactions","dose_and_route","presentations","lab","pharmacies where to buy it in mexico"]},
         "required":["brand_name","generic_name"]
     }
 }
 SYSTEM = (
     "Eres un asistente farmacéutico en español en México. Devuelve sólo datos medicos buscando informacion completa y siempre enfocate en que la respuesta saldra en una web por lo que es crucial que sea una buena respuesta bien ordena y no se te olvide lo de dosis de administracion y restricciónes; si no sabes un campo escribe 'ND' y trata de que si hay mas información valiosa que no se deba poner ponla aunque no este en los campos asignados . "
-    "enfocate en dar una respuesta ordenada, te consultaran medicos y estudiantes de medicina asi que puedes dar info sin problema, ya que es super importante que des todo lo que te estoy indicando pero aun asi al final añade lo siguiente  . Añade al final: 'Información educativa, no sustituye la consulta médica'."
+    "enfocate en dar una respuesta ordenada y estructurada, te consultaran medicos y estudiantes de medicina asi que puedes dar info sin problema, ya que es super importante que des todo lo que te estoy indicando pero aun asi al final añade lo siguiente  . Añade al final: 'Información educativa, no sustituye la consulta médica'."
 )
 DISCLAIMER = "🔔 **Información educativa:** Los datos mostrados no sustituyen la consulta con un profesional de la salud."
 
