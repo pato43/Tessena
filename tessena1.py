@@ -85,7 +85,7 @@ def fallback_desc(q:str)->str:
     r = client.chat.completions.create(
         extra_headers=HEADERS,
         model=MODEL_ID,
-        messages=[{"role":"user","content":f"Describe detalladamente pero no tan largo y  en español el medicamento {q} (usos, precauciones,farmaceutica y formulación, presentación, composicion, indicaciones terapeuticas, efectos adversos, propiedades farmaceuticas, contraindicaciones, restricciones de uso en embarazo y lactancia, interacciones medicamentosas, dosis y vias de administracion, manejo ante sobresosis o ingesta accidental y recomendaciones sobre el medicamento)."}],
+        messages=[{"role":"user","content":f"Describe detalladamente en español de méxico pero no tan largo y  en español el medicamento y recuerda que todos estas sustancias des la respuesta en español  {q} (usos, precauciones,farmaceutica y formulación, presentación, composicion, indicaciones terapeuticas, efectos adversos, propiedades farmaceuticas, contraindicaciones, restricciones de uso en embarazo y lactancia, interacciones medicamentosas, dosis y vias de administracion, manejo ante sobresosis o ingesta accidental y recomendaciones sobre el medicamento)."}],
     )
     return r.choices[0].message.content.strip()
 
