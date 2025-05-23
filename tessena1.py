@@ -114,7 +114,7 @@ with logo_col:
     st.image("tessena1.png", width=80)
 with text_col:
     st.markdown("## Tessena IA Médica 🇲🇽")
-    st.write("""<span style='font-size:0.95rem;'>IA de consulta médica en español • impulsada por <strong>Qwen3‑32B</strong> y próximamente conectada a <strong>OpenDrugs, FDA</strong> y <strong>COFEPRIS</strong>.</span>""", unsafe_allow_html=True)
+    st.write("""<span style='font-size:0.95rem;'>IA de consulta médica en español • impulsada por <strong>Qwen3‑32B</strong> y conectada a <strong>OpenDrugs, FDA</strong> y <strong>COFEPRIS</strong>.</span>""", unsafe_allow_html=True)
 
 st.divider()
 
