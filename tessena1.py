@@ -1,13 +1,16 @@
+# app.py – Tessena • Buscador IA de Medicamentos (DeepSeek)
 # ---------------------------------------------------
 # Requisitos:
 #   pip install streamlit openai pillow requests
+# Variables de entorno necesarias:
+#   DEEPSEEK_API_KEY = "tu‑clave"  (no compartas en código)
 # ---------------------------------------------------
 
 import os, json, requests
 from io import BytesIO
 from PIL import Image
 import streamlit as st
-import openai
+from openai import OpenAI  # SDK 1.x compatible también con DeepSeek
 
 # ---------- Configuración general ----------
 st.set_page_config(
@@ -19,9 +22,11 @@ HERO_IMG_URL = (
     "https://github.com/pato43/Tessena/blob/main/tessena1.png"
 )  # cámbialo por la URL definitiva
 
-# Configuración de DeepSeek
-openai.api_key = "sk-3fcdb61f94df48428f395b7953d6eed2"
-openai.base_url = "https://api.deepseek.com/v1/"
+# Crea el cliente apuntando al endpoint DeepSeek
+client = OpenAI(
+    api_key=os.getenv("sk-3fcdb61f94df48428f395b7953d6eed2"),
+    base_url="https://api.deepseek.com",
+)
 
 # ---------- Esquema JSON que el modelo debe rellenar ----------
 DRUG_CARD_SCHEMA = {
@@ -59,7 +64,8 @@ def load_hero(url: str):
 
 
 def call_deepseek(query: str) -> dict:
-    """Llama a DeepSeek y devuelve el diccionario con la ficha."""
+    """Llama a deepseek-chat y devuelve la ficha estructurada."""
+
     system_prompt = (
         "Eres un asistente farmacéutico. Contesta únicamente con información que conozcas con alta certeza. "
         "Si no hay datos fiables escribe 'ND'. No prescribas dosis personalizadas. "
@@ -71,16 +77,17 @@ def call_deepseek(query: str) -> dict:
         {"role": "user", "content": query},
     ]
 
-    resp = openai.chat.completions.create(
-        model="deepseek-chat",
+    resp = client.chat.completions.create(
+        model="deepseek-chat",  # o deepseek-reasoner si prefieres el modelo de razonamiento
         messages=messages,
         tools=[{"type": "function", "function": DRUG_CARD_SCHEMA}],
         tool_choice={"type": "function", "function": {"name": "drug_card"}},
+        stream=False,
     )
 
     try:
-        args = resp.choices[0].message.tool_calls[0].function.arguments
-        return json.loads(args)
+        args_json = resp.choices[0].message.tool_calls[0].function.arguments
+        return json.loads(args_json)
     except Exception:
         return {}
 
@@ -122,11 +129,13 @@ def main():
         search_pressed = st.button("🔍 Buscar")
 
     if search_pressed and query.strip():
-        with st.spinner("Consultando Tessena IA…"):
+        with st.spinner("Consultando Tessena IA (DeepSeek)…"):
             card = call_deepseek(query)
 
         if card:
-            st.success(f"### {card.get('brand_name', 'Medicamento')} ({card.get('generic_name', '')})")
+            st.success(
+                f"### {card.get('brand_name', 'Medicamento')} ({card.get('generic_name', '')})"
+            )
             section("Composición", card.get("composition"))
             section("Indicaciones terapéuticas", card.get("therapeutic_indications"))
             section("Contraindicaciones", card.get("contraindications"))
@@ -141,7 +150,7 @@ def main():
     # Pie de página -------------------------------------------
     st.divider()
     st.caption(
-        "© 2025 Tessena – Proyecto de inteligencia farmacéutica.  |  Made with Streamlit & DeepSeek"
+        "© 2025 Tessena – Proyecto de inteligencia farmacéutica.  |  Made with Streamlit & deepseek‑chat"
     )
 
 
