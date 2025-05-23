@@ -125,7 +125,7 @@ def fetch_card(q:str)->dict:
         "No prescribas dosis personalizadas. Al final añade la frase 'Información educativa, no sustituye la consulta médica'."
     )
     resp = client.chat.completions.create(
-        model="deepseek/deepseek-r1:free",
+        model="deepseek/deepseek-chat-v3-0324:free",
         messages=[{"role":"system","content":system},{"role":"user","content":q}],
         tools=[{"type":"function","function":DRUG_CARD_SCHEMA}],
         tool_choice={"type":"function","function":{"name":"drug_card"}},
